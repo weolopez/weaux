@@ -1,5 +1,6 @@
 // indexHtml.ts
-export const indexHtml = `
+export function indexHtml(text: string) {
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,12 +8,14 @@ export const indexHtml = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
-    <script src="kill-server-button.js"></script>
+    <script src="/js/kill-server-button.js"></script>
 </head>
 <body>
-    <h1>Hello, World!</h1>
+    <h1>Hello, Y'll!</h1>
+    <p>${text}</p>
 
     <kill-server-button></kill-server-button>
 </body>
 </html>
 `;
+}

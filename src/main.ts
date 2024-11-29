@@ -1,6 +1,7 @@
-import { handler } from "./handler.ts";
-import { args, pidFile, showHelp } from "./utils.ts";
-import { completion } from "./completions.ts";
+import { handler } from "./routes/handler.ts";
+import { args, pidFile, showHelp } from "./utils/cli.ts";
+import { completion, getCommand } from "./completions.ts";
+import { cache } from "./utils/db.ts";
 
 if (args.h) {
   showHelp();
@@ -10,6 +11,10 @@ if (args.h) {
 if (args.s) {
   console.log("Starting server...");
   Deno.serve(handler);
+  const command = new Deno.Command("open", {
+    args: ["http://localhost:8000"],
+  });
+  await command.output();
 } else if (args.k) {
   console.log("Killing the running server...");
   try {
@@ -20,6 +25,16 @@ if (args.s) {
   } catch {
     console.log("No running server found.");
   }
+  Deno.exit(0);
+} else if (args.p) {
+  console.log("Creating a system prompt...");
+  const prompt = args._[args._.length - 1];
+  if (typeof prompt === "string") {
+    getCommand(prompt);
+  }
+
+  console.log(`Prompt: ${prompt}`);
+
   Deno.exit(0);
 } else {
   const lastArg = args._[args._.length - 1];
@@ -37,7 +52,7 @@ if (args.s) {
     } catch {
       // If the server is not running, start it in the background
       console.log("Server is not running. Starting it in the background...");
-      const command = new Deno.Command("./weaux", {
+      const command = new Deno.Command("weaux", {
         args: ["-s"],
         stdout: "null",
         stderr: "null",

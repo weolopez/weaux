@@ -9,4 +9,7 @@ export function showHelp() {
   console.log("  -h  Show help");
   console.log("  -s  Start the server");
   console.log("  -k  Kill the running server");
+  console.log(
+    '  -p  Create a system prompt. !promptName "what does the prompt do."',
+  );
 }
