@@ -1,9 +1,6 @@
 // kill-server-button.ts
 
-export const KillServerButton =
-  //multi-line string
-  `
-// kill-server-button.js
+export const KillServerButton = /*javascript*/ `
 class KillServerButton extends HTMLElement {
   constructor() {
     super();

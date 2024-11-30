@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "deno run --unstable-kv --watch --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts -s",
     "run": "deno run --unstable-kv --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts",
-    "debug": "deno run --inspect-wait --unstable-kv --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts -s",
+    "debug": "deno run --inspect-wait --watch --unstable-kv --allow-env --allow-net --allow-read --allow-write --allow-run src/main.ts -s",
     "build": "deno compile --unstable-kv --allow-env --allow-net --allow-read --allow-write --allow-run -o /Users/mauriciolopez/bin/weaux src/main.ts "
   },
   "imports": {

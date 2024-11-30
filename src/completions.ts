@@ -19,7 +19,8 @@ export async function getCommand(content: string): Promise<string | undefined> {
 
   if (match && match[1]) {
     const name = match[1];
-    return getPrompts(name);
+    const p = await getPrompts(name);
+    return p;
   } //   let messages: [OpenAI.ChatCompletionMessageParam] = messgeFactory(
   //     [{
   //       role: "user",

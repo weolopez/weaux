@@ -9,7 +9,22 @@
  * @returns The cached object or the extracted fields from the object.
  */
 export const kv = await Deno.openKv("/tmp/.weaux.db");
-//create a function that outputs the whole database
+export async function dumpDatabase(): Promise<any> {
+  const entries = [];
+  for await (const entry of kv.list({ prefix: [] })) {
+    entries.push(extractFields(entry, { db: "key[0]", key: "key[1]" }));
+  }
+  return entries;
+}
+// const kv = await Deno.openKv();
+// await kv.delete(["preferences", "alan"]);
+export async function deleteFromDB(
+  cacheName: string,
+  cacheKey: string,
+): Promise<void> {
+  const prompt = cacheKey.replace(/\^(\w+)/, "").trim();
+  await kv.delete([cacheName, prompt]);
+}
 
 export function getDb(name: string) {
   return kv.get([name]);
@@ -29,7 +44,9 @@ function extractFields(jsonObject: any, keyMappings: any) {
   for (const key in keyMappings) {
     if (jsonObject && jsonObject.hasOwnProperty(keyMappings[key])) {
       extractedFields[key] = jsonObject[keyMappings[key]];
-    } else if (keyMappings[key].includes(".")) {
+    } else if (
+      keyMappings[key].includes(".") || keyMappings[key].includes("[")
+    ) {
       extractedFields[key] = getValueByPath(jsonObject, keyMappings[key]);
     }
   }

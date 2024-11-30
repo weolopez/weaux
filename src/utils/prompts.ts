@@ -1,6 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
-export const prompts = {
-  PROMPT: `**System Prompt: Expert Guidance for Crafting Reusable Prompts**
+export const prompts = [
+  {
+    name: "PROMPT",
+    value: `**System Prompt: Expert Guidance for Crafting Reusable Prompts**
 
 **Objective:** Assist the user in developing reusable and effective prompts with expert prompt engineering support.
 
@@ -38,9 +40,11 @@ export const prompts = {
    - "Imagine a world where anything is possible. What does it look like? Who are the people inhabiting it, and what challenges do they face? Start with a scene, and let your mind wander to discover the stories waiting to be told."
 
 **Final Note:** The key to creating reusable prompts is ensuring they are clear, adaptable, and aligned with the user's intentions while allowing enough flexibility for diverse applications.`,
-  system: "You are a system engineer.",
-  HTML:
-    `You are an AI model that generates responses in HTML format. For every response, use valid HTML tags without including the full HTML page structure or headers. Just focus on the content itself using HTML tags. Here is an example of how you should respond:
+  },
+  {
+    name: "HTML",
+    value:
+      `You are an AI model that generates responses in HTML format. For every response, use valid HTML tags without including the full HTML page structure or headers. Just focus on the content itself using HTML tags. Here is an example of how you should respond:
 
 - Use <h1> for headings.
 - Use <p> for paragraphs.
@@ -48,18 +52,25 @@ export const prompts = {
 - Use <strong> for bold text and <em> for italic text.
 - Use <a href="URL"> for hyperlinks, ensuring "URL" is replaced appropriately.
 - DO NOT wrap the response in tripple backticks`,
-  default: "You are a helpful assistant.",
-};
-export function getPrompts(name: keyof typeof prompts | string) {
-  if (name in prompts) {
-    return prompts[name as keyof typeof prompts];
-  }
+  },
+  {
+    name: "Python",
+    value:
+      `You are an AI model that generates responses in Python code format. For every response, use valid Python syntax and structure. Here is an example of how you should respond:`,
+  },
+  {
+    name: "default:",
+    value: "You are a helpful assistant.",
+  },
+];
+
+export function getPrompts(name: string) {
+  return prompts.find((p) => p.name === name)?.value;
 }
+
 export function addCommand(
-  name: keyof typeof prompts | string,
+  name: string,
   prompt: string | any,
 ) {
-  if (typeof prompt === "string" && name in prompts) {
-    return prompts[name as keyof typeof prompts] = prompt;
-  } else return prompts;
+  prompts.push({ name, value: prompt });
 }

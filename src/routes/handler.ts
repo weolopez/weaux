@@ -7,6 +7,10 @@ import { KillServerButton } from "../www/kill-server-button.ts";
 
 export async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
+  if (url.pathname.startsWith("/db")) {
+    const dbHandler = await import("./db.ts");
+    return await dbHandler.handler(req);
+  }
 
   if (req.method === "POST" && url.pathname === "/kill") {
     return await killHandler();
