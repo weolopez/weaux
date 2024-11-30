@@ -13,74 +13,33 @@ const client = new OpenAI({
  * @param content
  * @returns
  */
-export async function getCommand(content: string): Promise<string | undefined> {
-  const match = content.match(/\^(\w+)/);
-  // return match ? match[1] : null;
+export async function getCommand(content: string): Promise<Array<any>> {
+  const matches = content.match(/\^(\w+)/g);
+  if (!matches) return [];
 
-  if (match && match[1]) {
-    const name = match[1];
-    const p = await getPrompts(name);
-    return p;
-  } //   let messages: [OpenAI.ChatCompletionMessageParam] = messgeFactory(
-  //     [{
-  //       role: "user",
-  //       content: name,
-  //     }],
-  //   );
-  //   messages = messgeFactory(
-  //     messages,
-  //     prompts["prompt"],
-  //     "system",
-  //   );
-  //   return await cache(
-  //     "command",
-  //     name,
-  //     await client.chat.completions.create({
-  //       messages: messages,
-  //       model: "gpt-4o",
-  //     }),
-  //     {
-  //       content: "choices[0].message.content",
-  //     },
-  //   ).then((response) => response.content);
-  // }
-  else return undefined;
-  //   let messages: [OpenAI.ChatCompletionMessageParam] = messgeFactory(
-  //     [{
-  //       role: "user",
-  //       content: content,
-  //     }],
-  //   );
-
-  //   messages = messgeFactory(
-  //     messages,
-  //     prompts['prompt'],
-  //     "system",
-  //   );
-
-  //   return await cache(
-  //     "command",
-  //     match[1] ?? "",
-  //     await client.chat.completions.create({
-  //       messages: messages,
-  //       model: "gpt-4o",
-  //     }),
-  //     {
-  //       chatId: "id",
-  //       choices: "choices",
-  //       content: "choices[0].message.content",
-  //     },
-  // } else {
-  //   return undefined;
-  // }
+  const p = [];
+  for (const match of matches) {
+    const name = match.slice(1); // Remove the "^" character
+    p.push(await getPrompts(name));
+  }
+  return p;
 }
 
 function messgeFactory(
   messages: [OpenAI.ChatCompletionMessageParam],
-  content: string = "",
+  content: string | string[] = "",
   role: "system" | "user" | "assistant" = "user",
 ) {
-  if (content !== undefined && content !== "") {
+  if (Array.isArray(content)) {
+    content.forEach((c) => {
+      if (c !== undefined && c !== "") {
+        messages.push({
+          role: role,
+          content: c,
+        });
+      }
+    });
+  } else if (content !== undefined && content !== "") {
     messages.push({
       role: role,
       content: content,

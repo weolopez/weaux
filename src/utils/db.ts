@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+
 /**
  * Caches an object with a specified key. If the object is already cached, it retrieves the cached value.
  * Optionally, it can extract specific fields from the object before caching.
@@ -9,26 +10,50 @@
  * @returns The cached object or the extracted fields from the object.
  */
 export const kv = await Deno.openKv("/tmp/.weaux.db");
-export async function dumpDatabase(): Promise<any> {
+
+// if (key) {
+//   const value = await kv.get([db, key]);
+//   return value?.value;
+// }
+// const entries = [];
+// for await (const entry of kv.list({ prefix: [db] })) {
+//   entries.push(entry.value);
+// }
+// return entries;
+export async function getDB(db?: string, key?: string): Promise<any> {
+  if (key && db) {
+    const value = await kv.get([db, key]);
+    return value ? [value] : undefined;
+  }
   const entries = [];
   for await (const entry of kv.list({ prefix: [] })) {
     entries.push(extractFields(entry, { db: "key[0]", key: "key[1]" }));
   }
-  return entries;
+  if (db) {
+    return entries.filter((entry) => entry.db === db);
+  } else {
+    return entries;
+  }
 }
+
 // const kv = await Deno.openKv();
 // await kv.delete(["preferences", "alan"]);
 export async function deleteFromDB(
   cacheName: string,
-  cacheKey: string,
+  cacheKey?: string,
 ): Promise<void> {
-  const prompt = cacheKey.replace(/\^(\w+)/, "").trim();
-  await kv.delete([cacheName, prompt]);
+  const delArray = [];
+  delArray.push(cacheName);
+  if (cacheKey) {
+    const prompt = cacheKey.replace(/\^(\w+)/, "").trim();
+    delArray.push(prompt);
+  }
+  await kv.delete(delArray);
 }
 
-export function getDb(name: string) {
-  return kv.get([name]);
-}
+// export function getDb(name: string) {
+//   return kv.get([name]);
+// }
 
 function getValueByPath(object: any, path: string) {
   return path.split(".").reduce((current, key) => {
@@ -59,7 +84,8 @@ export async function cache(
   cacheObject?: Promise<any>,
   jsonKeys?: any,
 ) {
-  const prompt = cacheKey.replace(/\^(\w+)/, "").trim();
+  const prompt = cacheKey.replace(/\^\w+\s*/g, "").trim();
+
   //if cacheKey starts with '^' then ignore the cache
   if (!cacheKey.startsWith("^")) {
     const cache = await kv.get<any>([cacheName, prompt]);
