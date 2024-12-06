@@ -32,16 +32,21 @@ export async function indexHtml(text: string) {
             margin-top: 1rem;
             width: 100%;
         }
+        .blue {
+            background-color: blue;
+        }
     </style>
 </head>
 <body>
     <button id="toggle-dbview-button">Toggle DB View</button>
+    <button id="save-button" class="blue">Save</button>
     <button id="kill-server-button">Kill Server</button>
     <textarea id="prompt" blur="send()">Enter Text</textarea>
     <hr>
 
-    <p>${text}</p>
+    <p id="post-body">${text}</p>
     <div id="dbview-container" style="display: none;">
+        <hr>
         ${await dbview()}
     </div>
     <script>
@@ -53,7 +58,34 @@ export async function indexHtml(text: string) {
             const dbviewContainer = document.getElementById("dbview-container");
             dbviewContainer.style.display = dbviewContainer.style.display === "none" ? "block" : "none";
         });
-
+        document.getElementById("save-button").addEventListener("click", () => {
+          const name = prompt("Please enter a name for the prompt");
+          if (!name) {
+            return;
+          }
+          let text = document.getElementById("post-body");
+          const POST_BODY = {
+            text: text.innerHTML
+          };  
+          fetch("/db/doc/"+name, { 
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(POST_BODY)
+          })
+          .then((response) => {
+              if (response.ok) {
+                  alert("Saved successfully.");
+              } else {
+                  alert("Failed to save.");
+              }
+          })
+          .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred.");
+          });
+        });
         document.getElementById("kill-server-button").addEventListener("click", killServer);
 
         function killServer() {

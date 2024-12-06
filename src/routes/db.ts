@@ -22,22 +22,37 @@ export async function handler(req: Request): Promise<Response> {
 
   const dbName = pathParts[1] ? decodeURIComponent(pathParts[1]) : undefined;
   const key = pathParts[2] ? decodeURIComponent(pathParts[2]) : undefined;
+  const filter = url.searchParams.get("filter");
+  let parsedFilter;
+  if (filter) {
+    try {
+      parsedFilter = JSON.parse(filter);
+    } catch (e) {
+      return new Response("Invalid filter JSON", { status: 400 });
+    }
+  }
 
   switch (req.method) {
     case "GET": {
-      const value = await getDB(dbName, key);
+      const value = await getDB(dbName, key, parsedFilter);
       return value
         ? new Response(JSON.stringify(value), { status: 200 })
         : new Response("Key not found", { status: 404 });
     }
-    // case 'POST':
-    //     if (!key) {
-    //         return new Response('Key is required for POST', { status: 400 });
-    //     }
-    //     const body = await req.json();
-    //     await kv.set(dbName, key, body);
-    //     return new Response('Key set', { status: 201 });
-    case "DELETE":
+    case "POST": {
+      if (!key) {
+        return new Response("Key is required for POST", { status: 400 });
+      }
+      if (!dbName) {
+        return new Response("Database name is required for POST", {
+          status: 400,
+        });
+      }
+      const body = await req.json();
+      await kv.set([dbName, key], body);
+      return new Response("Key set", { status: 201 });
+    }
+    case "DELETE": {
       if (!dbName) {
         return new Response("Database name is required for DELETE", {
           status: 400,
@@ -45,7 +60,9 @@ export async function handler(req: Request): Promise<Response> {
       }
       await deleteFromDB(dbName, key);
       return new Response("Key deleted", { status: 200 });
-    default:
+    }
+    default: {
       return new Response("Method not allowed", { status: 405 });
+    }
   }
 }

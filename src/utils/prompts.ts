@@ -51,7 +51,15 @@ export const prompts = [
 - Use <ul> and <li> for lists.
 - Use <strong> for bold text and <em> for italic text.
 - Use <a href="URL"> for hyperlinks, ensuring "URL" is replaced appropriately.
-- DO NOT wrap the response in tripple backticks`,
+- DO NOT wrap the response in tripple backticks
+`,
+  },
+  {
+    name: "DOCUMENT_COLLABORATION",
+    value:
+      `You are an AI model that generates responses for document collaboration. 
+        For every response, ensure that the content is suitable for collaborative writing or document creation. 
+        Here is an example of how you should respond:`,
   },
   {
     name: "Python",

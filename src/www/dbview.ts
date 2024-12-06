@@ -7,17 +7,28 @@ export async function dbview() {
         list-style-type: none;
         margin-bottom: 1rem;
     }
+    .view {
+        background-color: blue;
+    }
+    .view:hover {
+        background-color: blue;
+    }
+    .view:active {
+        background-color: blue;
+    }
     .delete {
         background-color: #f00;
+    }
+    .button {
         color: #fff;
         border: none;
         padding: 0.5rem 1rem;
         cursor: pointer;
     }
-    button:hover {
+    .delete:hover {
         background-color: #f55;
     }
-    button:active {
+    .delete:active {
         background-color: #f00;
     }
 </style>`;
@@ -27,7 +38,9 @@ export async function dbview() {
             <span class="item-key">${item.db}:${item.key}</span>
             <span class="item-details" style="display: none;">
                 <hr>
-                <button class="delete" onclick="deleteItem('${item.db}','${item.key}')">Delete</button>
+                <button class="button delete" onclick="deleteItem('${item.db}','${item.key}')">Delete</button>
+                <button class="button view" onclick="viewItem('${item.db}','${item.key}')">View JSON</button>
+                <button class="button view" onclick="viewHTML('${item.db}','${item.key}')">View HTML</button>
                 <hr>
             </span>
     </li>`).join("");
@@ -44,6 +57,14 @@ export async function dbview() {
         await fetch('/db/'+db+'/' + key, { method: 'DELETE' });
         alert(key +' deleted');
         window.location.reload();
+    }
+    viewItem = (db, key) => {
+        if (!key) key = '';
+        window.location.href = '/db/'+db+'/' + key+'?filter={\"html\":\"value.content\"}';
+    }
+    viewHTML = (db, key) => {
+        if (!key) key = '';
+        window.location.href = '/?prompt='+key;
     }
 </script>`;
 

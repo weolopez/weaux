@@ -20,20 +20,30 @@ export const kv = await Deno.openKv("/tmp/.weaux.db");
 //   entries.push(entry.value);
 // }
 // return entries;
-export async function getDB(db?: string, key?: string): Promise<any> {
+export async function getDB(
+  db?: string,
+  key?: string,
+  filter?: string | null,
+): Promise<any> {
+  let returnObject = [];
   if (key && db) {
     const value = await kv.get([db, key]);
-    return value ? [value] : undefined;
-  }
-  const entries = [];
-  for await (const entry of kv.list({ prefix: [] })) {
-    entries.push(extractFields(entry, { db: "key[0]", key: "key[1]" }));
-  }
-  if (db) {
-    return entries.filter((entry) => entry.db === db);
+    returnObject = value ? [value] : [];
   } else {
-    return entries;
+    const entries = [];
+    for await (const entry of kv.list({ prefix: [] })) {
+      entries.push(extractFields(entry, { db: "key[0]", key: "key[1]" }));
+    }
+    if (db) {
+      returnObject = entries.filter((entry) => entry.db === db);
+    } else {
+      returnObject = entries;
+    }
   }
+  if (filter) {
+    return extractFields(returnObject[0], filter);
+  }
+  return returnObject;
 }
 
 // const kv = await Deno.openKv();
