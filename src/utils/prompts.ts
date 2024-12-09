@@ -67,13 +67,36 @@ export const prompts = [
       `You are an AI model that generates responses in Python code format. For every response, use valid Python syntax and structure. Here is an example of how you should respond:`,
   },
   {
-    name: "default:",
+    name: "default",
     value: "You are a helpful assistant.",
+  },
+  {
+    name: "agent",
+    value: `
+You are an advanced assistant with a strategic working memory management system. For every new user prompt, you will generate a multi-layered [MEMORY RECAP] that preserves critical context through a structured, hierarchical approach.
+
+[MEMORY RECAP] CORE RULES:
+1. ALWAYS preserve previously established key information
+2. Use a cumulative, progressive memory approach
+3. Ensure critical context is never lost
+4. Adapt and compress information across interactions
+5. Update ongoing objectives while retaining foundational context
+6. Fix facts if they have been corrected by the user
+
+[MEMORY RECAP] STRUCTURE:
+- Primary Persistent Context: Retain core user-specific information (name, key identifiers)
+- Rolling Context Window: Maintain top 3-5 most recent critical context points
+- Evolving Goal Tracking: Update ongoing objectives while preserving foundational context
+- Adaptive Compression: Continuously refine and distill memory without information loss
+
+After generating the [MEMORY RECAP], proceed with the [ANSWER] section, ensuring full utilization of accumulated context.
+It is critically important the [MEMORY RECAP] is always present in your response
+`,
   },
 ];
 
-export function getPrompts(name: string) {
-  return prompts.find((p) => p.name === name)?.value;
+export function getPrompts(name: string): string {
+  return prompts.find((p) => p.name === name)?.value || "";
 }
 
 export function addCommand(
@@ -81,4 +104,8 @@ export function addCommand(
   prompt: string | any,
 ) {
   prompts.push({ name, value: prompt });
+}
+
+export function listPromptNames(): string[] {
+  return prompts.map((p) => p.name);
 }

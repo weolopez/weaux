@@ -1,7 +1,8 @@
 import { OpenAI } from "jsr:@openai/openai";
 import process from "node:process";
-import { cache } from "./utils/db.ts";
-import { getPrompts, prompts } from "./utils/prompts.ts";
+import { getOrSetDB } from "./utils/db.ts";
+import { getPrompts } from "./utils/prompts.ts";
+import * as log from "@std/log";
 
 const client = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"], // This is the default and can be omitted
@@ -20,6 +21,9 @@ export async function getCommand(content: string): Promise<Array<any>> {
   const p = [];
   for (const match of matches) {
     const name = match.slice(1); // Remove the "^" character
+    // if (name === "agent") {
+    //   p.push(await getPrompts(name) + await getOrSetMemory());
+    // } else
     p.push(await getPrompts(name));
   }
   return p;
@@ -89,6 +93,7 @@ function messgeFactory(
  */
 
 export async function completion(content: string | any) {
+  const firstWord = content.split(" ")[0];
   if (typeof content !== "string") {
     return "";
   }
@@ -102,23 +107,48 @@ export async function completion(content: string | any) {
 
   messages = messgeFactory(
     messages,
-    await getCommand(content),
+    await getCommand(content) + "\n" + await getOrSetDB("MEMORY"),
     "system",
   );
 
-  return await cache(
-    "cache",
-    content,
-    client.chat.completions.create({
-      messages: messages,
-      model: "gpt-4o",
-    }),
-    {
-      chatId: "id",
-      choices: "choices",
-      content: "choices[0].message.content",
-    },
-  ).then((response) =>
-    response.isCached ? `^${response.content}` : response.content
+  messages = messgeFactory(
+    messages,
+    await getOrSetDB("RESPONSE"),
+    "assistant",
   );
+
+  const result = await client.chat.completions.create({
+    messages: messages,
+    model: "gpt-4o-mini",
+  }).then((response) => response.choices[0].message.content);
+
+  const output = {
+    messages: messages,
+    result: result,
+  };
+
+  getOrSetDB("MEMORY", result, "[MEMORY RECAP]", "[ANSWER]");
+  getOrSetDB("RESPONSE", result, "[ANSWER]");
+
+  log.info(JSON.stringify(output, null, 2));
+
+  return result || "";
+
+  // return await cache(
+  //   "cache",
+  //   content,
+  //   client.chat.completions.create({
+  //     messages: messages,
+  //     model: "gpt-4o-mini",
+  //   }),
+  //   {
+  //     chatId: "id",
+  //     choices: "choices",
+  //     content: "choices[0].message.content",
+  //   },
+  // ).then((response) =>
+  //   response.isCached ? `^${response.content}` : response.content
+  // );
 }
+
+// max_tokens: 16384,

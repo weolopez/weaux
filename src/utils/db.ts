@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 // deno-lint-ignore-file no-explicit-any
 
 /**
@@ -95,21 +97,56 @@ export async function cache(
   jsonKeys?: any,
 ) {
   const prompt = cacheKey.replace(/\^\w+\s*/g, "").trim();
+  function compressKey(key: string): string {
+    const hash = createHash("sha256");
+    hash.update(key);
+    return hash.toString().slice(0, 8); // Use the first 8 characters of the hash
+  }
 
   //if cacheKey starts with '^' then ignore the cache
   if (!cacheKey.startsWith("^")) {
-    const cache = await kv.get<any>([cacheName, prompt]);
+    cacheKey = compressKey(cacheKey);
+    const cache = await kv.get<any>([cacheName, cacheKey]);
     if (cache.value) {
       cache.value["isCached"] = true;
+      cache.value = cache.value.newCacheObject;
+      // console.log("Cache hit: ", cache);
+      await kv.set(["latest"], {
+        prompt: prompt,
+        agent: cache.value.choices[0].message.content,
+      });
       return cache.value;
     } else if (cacheObject === undefined) {
       return undefined;
     }
   }
+
+  cacheKey = compressKey(cacheKey);
   const newCacheObject = jsonKeys
     ? extractFields(await cacheObject, jsonKeys)
     : await cacheObject;
 
-  await kv.set(["cache", prompt], newCacheObject);
+  // getOrSetDB("MEMORY", newCacheObject);
+
+  await kv.set(["cache", cacheKey], { prompt, newCacheObject });
   return newCacheObject;
+}
+
+export async function getOrSetDB(
+  key: string,
+  newCacheObject?: any,
+  startTag?: string,
+  endTag?: string,
+): Promise<string> {
+  if (!newCacheObject) {
+    const memoryValue = await kv.get([key]);
+    return memoryValue?.value?.toString() || "";
+  } else {
+    let memory = newCacheObject.substring(newCacheObject.indexOf(startTag));
+    if (endTag) {
+      memory = memory.substring(0, memory.indexOf(endTag));
+    }
+    await kv.set([key], memory);
+    return "";
+  }
 }
