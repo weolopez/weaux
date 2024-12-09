@@ -147,6 +147,6 @@ export async function getOrSetDB(
       memory = memory.substring(0, memory.indexOf(endTag));
     }
     await kv.set([key], memory);
-    return "";
+    return memory || "";
   }
 }

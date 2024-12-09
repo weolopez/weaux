@@ -4,6 +4,8 @@ import { completion, getCommand } from "../completions.ts";
 import { listPromptNames } from "../utils/prompts.ts";
 import open from "open";
 import { kv } from "./db.ts";
+import * as readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 
 export const args = parse(Deno.args);
 export const pidFile = "/Users/mauriciolopez/Development/deno/weaux/server.pid";
@@ -14,6 +16,7 @@ export function showHelp() {
   );
   console.log("Options:");
   console.log("  -h  Show help");
+  console.log("  -i  Start interactive chat");
   console.log("  -s  Start the server");
   console.log("  -k  Kill the running server");
   console.log("  -r  Recap the last interaction with the assistant");
@@ -68,6 +71,28 @@ export async function handleArgs() {
     console.log("Listing all available prompts...");
     const prompts: string[] = listPromptNames();
     prompts.forEach((prompt: any) => console.log(prompt));
+    Deno.exit(0);
+  } else if (args.i || args.interactive) {
+    console.log("Starting interactive chat...");
+    let chat = true;
+    const rl = readline.createInterface({ input, output });
+    while (chat) {
+      const prompt = await rl.question("> ");
+      if (prompt.startsWith("!")) {
+        const command = prompt.split(" ")[0].slice(1);
+        if (command === "exit") {
+          chat = false;
+        } else if (command === "get") {
+          const key = prompt.split(" ")[1];
+          const value = await kv.get([key]);
+          console.log(value);
+        }
+      } else {
+        const result = await completion("^agent " + prompt);
+        console.log("< " + result);
+      }
+    }
+    rl.close();
     Deno.exit(0);
   }
 
