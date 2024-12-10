@@ -142,7 +142,10 @@ export async function getOrSetDB(
     const memoryValue = await kv.get([key]);
     return memoryValue?.value?.toString() || "";
   } else {
-    let memory = newCacheObject.substring(newCacheObject.indexOf(startTag));
+    let memory = newCacheObject;
+    if (startTag) {
+      memory = memory.substring(memory.indexOf(startTag) + startTag.length);
+    }
     if (endTag) {
       memory = memory.substring(0, memory.indexOf(endTag));
     }

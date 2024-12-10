@@ -2,7 +2,6 @@ import { parse } from "https://deno.land/std@0.106.0/flags/mod.ts";
 import { handler } from "../routes/handler.ts";
 import { completion, getCommand } from "../completions.ts";
 import { listPromptNames } from "../utils/prompts.ts";
-import open from "open";
 import { kv } from "./db.ts";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -100,7 +99,6 @@ export async function handleArgs() {
   if (typeof lastArg === "string") {
     const result = await completion(lastArg);
     console.log(result);
-    await open(result);
   } else {
     console.log("Use -h for help");
     // Check if the server is running

@@ -1,12 +1,10 @@
-import { OpenAI } from "jsr:@openai/openai";
-import process from "node:process";
+
 import { getOrSetDB } from "./utils/db.ts";
 import { getPrompts } from "./utils/prompts.ts";
+import { generateText } from "./azure.ts";
 // import * as log from "@std/log";
 
-const client = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"], // This is the default and can be omitted
-});
+
 
 /**
  * getCommand - Get the command from the content string
@@ -30,7 +28,7 @@ export async function getCommand(content: string): Promise<Array<any>> {
 }
 
 function messgeFactory(
-  messages: [OpenAI.ChatCompletionMessageParam],
+  messages: { role: string; content: string; }[],
   content: string | string[] = "",
   role: "system" | "user" | "assistant" = "user",
 ) {
@@ -58,35 +56,35 @@ export async function completion(content: string | any) {
     return "";
   }
 
-  let messages: [OpenAI.ChatCompletionMessageParam] = messgeFactory(
+  let messages = messgeFactory(
     [{
       role: "user",
       content: content.replace(/\^(\w+)/, "").trim(),
     }],
   );
 
+  let recap = await getOrSetDB("MEMORY")
+  if (recap !== "") recap = "\n [MEMORY RECAP]" + recap + "[MEMORY RECAP]"
   messages = messgeFactory(
     messages,
-    await getCommand(content) + "\n" + await getOrSetDB("MEMORY"),
+    await getCommand(content) + recap,
     "system",
   );
 
-  messages = messgeFactory(
-    messages,
-    await getOrSetDB("RESPONSE"),
-    "assistant",
-  );
+  // messages = messgeFactory(
+  //   messages,
+  //   await getOrSetDB("RESPONSE"),
+  //   "assistant",
+  // );
 
-  const result = await client.chat.completions.create({
-    messages: messages,
-    model: "gpt-4o-mini",
-  }).then((response) => response.choices[0].message.content);
+  const result = await generateText(messages)
 
   const output = {
     messages: messages,
     result: result,
   };
-
+  await getOrSetDB("RESULT", result)
+  await getOrSetDB("MESSAGES", messages);
   await getOrSetDB("MEMORY", result, "[MEMORY RECAP]", "[ANSWER]");
   const answer: string = await getOrSetDB("RESPONSE", result, "[ANSWER]");
 
@@ -94,22 +92,4 @@ export async function completion(content: string | any) {
   if (answer.startsWith("[ANSWER")) {
     return answer.split("\n").slice(1).join("\n") || "";
   } else return answer || "";
-
-  // return await cache(
-  //   "cache",
-  //   content,
-  //   client.chat.completions.create({
-  //     messages: messages,
-  //     model: "gpt-4o-mini",
-  //   }),
-  //   {
-  //     chatId: "id",
-  //     choices: "choices",
-  //     content: "choices[0].message.content",
-  //   },
-  // ).then((response) =>
-  //   response.isCached ? `^${response.content}` : response.content
-  // );
 }
-
-// max_tokens: 16384,
